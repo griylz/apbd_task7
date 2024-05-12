@@ -10,9 +10,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
-builder.Services.AddScoped<IProductWarehouseRepository, ProductWarehouseRepository>();
+builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 
 var app = builder.Build();
+app.Configuration.GetConnectionString("2019SBD");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -23,5 +24,5 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
+app.MapControllers();
 app.Run();

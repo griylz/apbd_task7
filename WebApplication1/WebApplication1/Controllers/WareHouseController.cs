@@ -15,8 +15,19 @@ public class WareHouseController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult AddProductWarehouse([FromBody] AddProductWareHouse addProductWareHouse)
+    public async Task<IActionResult> AddProductWarehouse([FromBody] AddProductWareHouse addProductWareHouse)
     {
-        return Ok();
+        try
+        {
+            return Ok(await _warehouseService.AddProductWarehouse(addProductWareHouse));
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 }
