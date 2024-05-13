@@ -15,6 +15,7 @@ public class WareHouseController : ControllerBase
     }
 
     [HttpPost]
+    [Route("default")]
     public async Task<IActionResult> AddProductWarehouse([FromBody] AddProductWareHouse addProductWareHouse)
     {
         try
@@ -29,5 +30,12 @@ public class WareHouseController : ControllerBase
         {
             return BadRequest(e.Message);
         }
+    }
+
+    [HttpPost]
+    [Route("procedure")]
+    public async Task<IActionResult> AddProductWarehouseProcedure([FromBody] AddProductWareHouse addProductWareHouse)
+    {
+        return Ok();
     }
 }
