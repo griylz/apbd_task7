@@ -16,21 +16,21 @@ public class WarehouseService : IWarehouseService
 
     public async Task<int> AddProductWarehouse(AddProductWareHouse addProductWareHouse)
     {
-        if (!await _warehouseRepository.CheckProduct(addProductWareHouse.IdProduct))
-        {
-            throw new KeyNotFoundException($"Product with give Id - {addProductWareHouse.IdProduct} doesn't exist");
-        }
-
-        if (!await _warehouseRepository.CheckWarehouse(addProductWareHouse.IdWarehouse))
-        {
-            throw new KeyNotFoundException($"Warehouse with give Id - {addProductWareHouse.IdWarehouse} doesn't exist");
-        }
-
         var productWarehouse = DtoToModel(addProductWareHouse);
+        if (!await _warehouseRepository.CheckProduct(productWarehouse))
+        {
+            throw new KeyNotFoundException($"Product with give Id - {productWarehouse.IdProduct} doesn't exist");
+        }
+
+        if (!await _warehouseRepository.CheckWarehouse(productWarehouse.IdWarehouse))
+        {
+            throw new KeyNotFoundException($"Warehouse with give Id - {productWarehouse.IdWarehouse} doesn't exist");
+        }
+        
         if (!await _warehouseRepository.GetOrder(productWarehouse))
         {
             throw new KeyNotFoundException(
-                $"Order with given product Id - {addProductWareHouse.IdWarehouse} and amount - {addProductWareHouse.Amount} doesn't exist");
+                $"Order with given product Id - {productWarehouse.IdWarehouse} and amount - {productWarehouse.Amount} doesn't exist");
         }
         if (await _warehouseRepository.CheckOrder(productWarehouse.IdOrder))
         {
@@ -38,7 +38,9 @@ public class WarehouseService : IWarehouseService
                 $"We already have a value in the Product_Warehouse table with give Id Order - {productWarehouse.IdOrder}");
         }
 
-        return productWarehouse.IdOrder;
+        await _warehouseRepository.UpdateFulfilledData(productWarehouse.IdOrder);
+        var res =  await _warehouseRepository.AddProductWarehouse(productWarehouse);
+        return res;
     }
 
     public ProductWarehouse DtoToModel(AddProductWareHouse addProductWareHouse)

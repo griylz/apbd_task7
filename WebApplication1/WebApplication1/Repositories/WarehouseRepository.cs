@@ -14,7 +14,7 @@ public class WarehouseRepository : IWarehouseRepository
     }
 
 
-    public async Task<bool> CheckProduct(int idProduct)
+    public async Task<bool> CheckProduct(ProductWarehouse productWarehouse)
     {
         try
         {
@@ -23,11 +23,13 @@ public class WarehouseRepository : IWarehouseRepository
             await connection.OpenAsync();
             await using var command = new SqlCommand();
             command.Connection = connection;
-            command.CommandText = @"SELECT 1 FROM Product WHERE IdProduct = @IdProduct";
-            command.Parameters.AddWithValue("@idProduct", idProduct);
+            command.CommandText = @"SELECT Price FROM Product WHERE IdProduct = @IdProduct";
+            command.Parameters.AddWithValue("@idProduct", productWarehouse.IdProduct);
             var result = await command.ExecuteScalarAsync();
-            if (result != null)
+            if (result != DBNull.Value && result != null)
             {
+                decimal price = (decimal)result;
+                productWarehouse.Price = price * productWarehouse.Amount;
                 return true;
             }
             else
@@ -128,13 +130,67 @@ public class WarehouseRepository : IWarehouseRepository
         }
     }
 
-    public async Task<bool> UpdateFulfilledData(DateTime currentDateTime)
+    public async Task<bool> UpdateFulfilledData(int idOrder)
     {
-        throw new NotImplementedException();
+        try
+        {
+
+            await using var connection = new SqlConnection(_configuration.GetConnectionString("2019SBD"));
+            await connection.OpenAsync();
+            await using var command = new SqlCommand();
+            command.Connection = connection;
+            command.CommandText = @"UPDATE [Order] SET FulfilledAt = @FulfilledAt WHERE IdOrder=@IdOrder";
+            command.Parameters.AddWithValue("@FulfilledAt", DateTime.UtcNow);
+            command.Parameters.AddWithValue("@IdOrder",idOrder); 
+            var result = await command.ExecuteNonQueryAsync();
+            if (result > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return false;
+        }
     }
 
     public async Task<int> AddProductWarehouse(ProductWarehouse productWarehouse)
     {
-        throw new NotImplementedException();
+        try
+        {
+
+            await using var connection = new SqlConnection(_configuration.GetConnectionString("2019SBD"));
+            await connection.OpenAsync();
+            await using var command = new SqlCommand();
+            command.Connection = connection;
+            command.CommandText = @"INSERT INTO Product_Warehouse (IdWarehouse, IdProduct, IdOrder, Amount, Price, CreatedAt) VALUES (@IdWarehouse, @IdProduct, @IdOrder, @Amount, @Price, @CreatedAt);SELECT SCOPE_IDENTITY();";
+            command.Parameters.AddWithValue("@IdWarehouse",productWarehouse.IdWarehouse);
+            command.Parameters.AddWithValue("@IdProduct",productWarehouse.IdProduct);
+            command.Parameters.AddWithValue("@IdOrder",productWarehouse.IdOrder);
+            command.Parameters.AddWithValue("@Amount",productWarehouse.Amount);
+            command.Parameters.AddWithValue("@Price",productWarehouse.Price);
+            command.Parameters.AddWithValue("@CreatedAt",productWarehouse.CreatedAt);
+
+            var res = await command.ExecuteScalarAsync();
+            if (res != null)
+            {
+                return Convert.ToInt32(res);
+            }
+            else
+            {
+                Console.WriteLine("sas");
+                return 0;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return 0;
+        }   
     }
 }
